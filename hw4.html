@@ -1,0 +1,125 @@
+<html>
+<head>
+	<title>Homework 4</title>
+	<meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+	<script type="text/javascript">
+        function loadJSON (paraForm) {
+
+        	url = paraForm.URL.value;
+        	if(url == ""){
+        		alert("Please enter the JSON file URL !");
+        		return;
+        	}
+
+            var xmlhttp = new XMLHttpRequest(); 
+            xmlhttp.open("GET",url,false); 
+            xmlhttp.send();
+
+            if(xmlhttp.status==404)
+            {
+            	alert("Status 404, Please check the file URL !");
+            	return;
+            }
+            jsonDoc = xmlhttp.responseText;
+
+            if(jsonDoc == "{}"){
+            	alert("the json file only has an empty dic !");
+            	return;
+            }
+			parseJSON(jsonDoc);
+		}
+
+		function parseJSON(jsonString){
+
+			try{
+				jsonObject = JSON.parse(jsonString);
+			}catch(err){
+				if(err.name == "SyntaxError"){
+					alert(err.name+"! Invalid json file.");
+				    return;
+				}
+				alert(err.message);
+				return;
+			}
+
+			html_text = "<html><head><title>Top Container Shipping Companies</title></head><body>" ;
+			html_text += "<table border = '2' >";
+
+			var tableData = jsonObject.Mainline.Table;
+			var headerData = jsonObject.Mainline.Table.Header.Data;
+
+			if(tableData.hasOwnProperty('Row')){
+				var rowData = jsonObject.Mainline.Table.Row;
+			}else{
+				alert("The file doesn't have companies'data !");
+				return;
+			}
+			
+			html_text += "<tbody>";
+			html_text += "<tr>";
+			for(var i = 0; i< headerData.length; i++){
+				var header = headerData[i];
+				html_text += "<th>" +header+ "</th>";
+			}
+			html_text += "</tr>";
+
+            if(rowData.length==0){
+				alert("The file doesn't have companies'data!");
+				return;
+			}
+			for(var j=0; j<rowData.length;j++){
+				var singleRow = rowData[j];
+				html_text += "<tr>";	
+				for(var key in singleRow){
+					if(key != "Hubs"&& key != "Logo" && key != "HomePage"){
+						tdContent = singleRow[key];
+						html_text += "<td>"+ tdContent+"</td>";
+					}
+					if(key == "Hubs"){
+						var hubs = singleRow[key];
+						var hubArray = hubs.Hub;
+						if(hubArray.length == 0){
+							html_text += "<td>"+""+"</td>";
+						}else{
+							html_text += "<td><ul>";
+							var count = 0;
+							for(var item in hubArray){
+								if(count == 0){
+									html_text += "<li style=\"font-weight:bold;\">"+hubArray[item]+"</li>";	
+								}else{
+									html_text += "<li>"+hubArray[item]+"</li>";
+								}
+								count++;
+							}
+							html_text += "</ul></td>";
+						}
+					}
+					if(key == "Logo"){
+						imgUrl = singleRow[key];
+						html_text += "<td><img src=\""+imgUrl+"\" width=\"300\"/></td>";
+					}
+					if(key == "HomePage"){
+						pageURL = singleRow[key];
+						html_text += "<td><a href=\""+pageURL+"\">"+pageURL+"</a></td>";
+					}
+				}
+				html_text +="</tr>";
+			}
+			html_text +="</tbody></table></body></html>";
+
+            popWin = window.open("", "Assignment4", "height=800,width=1200");
+            popWin.document.write(html_text);  
+            popWin.document.close(); 
+        }
+	</script>
+</head>
+
+<body style="text-align:center;">
+	<h3 style="margin-top:150px">Enter URL for Container Shipping Companies List JSON File </h3>
+	<form name="subform" method="POST" id="location">
+		<input type="text" name="URL" maxlength="100" size="30" value="containerlist.json" />
+		<br><br>
+		<input type="button" name="submit" value="Submit Query" onClick="loadJSON(this.form)"/>
+	</form>
+</body>
+</html>
